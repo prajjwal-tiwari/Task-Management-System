@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <base target="_top">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <style>
+
+    body{
+      margin:0;
+      padding:0;
+      background:#f5f7fb;
+      font-family:Arial,sans-serif;
+    }
+
+    .container{
+      max-width:900px;
+      margin:40px auto;
+      background:white;
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .header{
+      background:#2563eb;
+      color:white;
+      padding:25px;
+    }
+
+    .content{
+      padding:30px;
+    }
+
+    .card{
+      background:#f8fafc;
+      border-radius:12px;
+      padding:20px;
+      margin-bottom:20px;
+    }
+
+    textarea{
+      width:100%;
+      min-height:150px;
+      padding:15px;
+      border:1px solid #d1d5db;
+      border-radius:10px;
+      resize:vertical;
+      font-size:14px;
+    }
+
+    .btn{
+      border:none;
+      padding:14px 24px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:bold;
+      color:white;
+      text-decoration:none;
+      display:inline-block;
+      margin-right:10px;
+    }
+
+    .folder{
+      background:#16a34a;
+    }
+
+    .submit{
+      background:#2563eb;
+    }
+
+    .status{
+      display:inline-block;
+      padding:8px 14px;
+      border-radius:8px;
+      background:#e5e7eb;
+      font-size:12px;
+      font-weight:bold;
+    }
+
+    button:disabled{
+
+     opacity:0.7;
+
+     cursor:not-allowed;
+
+    }
+
+
+  </style>
+
+  
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+
+    <h2>
+      Task Submission Portal
+    </h2>
+
+    <div>
+      Task ID:
+      <?= taskId ?>
+    </div>
+
+  </div>
+
+  <div class="content">
+
+    <div class="card">
+
+      <h3>
+        Task Submission
+      </h3>
+
+      <p>
+        Add completion remarks below.
+      </p>
+
+    </div>
+
+    <div class="card">
+
+      <label>
+
+        Completion Remark
+
+      </label>
+
+      <br><br>
+
+      <textarea
+        id="remark"
+        placeholder="Enter completion details..."
+      ></textarea>
+
+    </div>
+
+    <button
+      id="submitBtn"
+      class="btn submit"
+      onclick="submitTask()">
+
+      SUBMIT TASK
+
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+function submitTask(){
+
+  const remark =
+
+    document
+      .getElementById(
+        'remark'
+      )
+      .value
+      .trim();
+
+  if(
+    remark.length < 10
+  ){
+
+    alert(
+      'Please enter proper remark'
+    );
+
+    return;
+  }
+
+  const btn =
+    document.getElementById(
+      'submitBtn'
+    );
+
+  btn.disabled = true;
+
+  btn.innerHTML =
+    '⏳ Submitting...';
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(){
+
+        btn.innerHTML =
+          '✓ Submitted';
+
+        alert(
+          'Task Submitted Successfully'
+        );
+
+      }
+    )
+
+    .withFailureHandler(
+      function(error){
+
+        btn.disabled = false;
+
+        btn.innerHTML =
+          'SUBMIT TASK';
+
+        alert(
+          error.message
+        );
+
+      }
+    )
+
+    .submitTask(
+
+      '<?= taskId ?>',
+
+      remark
+
+    );
+
+}
+
+
+</script>
+
+</body>
+</html>

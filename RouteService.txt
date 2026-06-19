@@ -1,0 +1,163 @@
+/*********************************************************
+ * ROUTING SERVICE
+ *********************************************************/
+
+function doGet(e) {
+
+  try {
+
+    const action =
+      e.parameter.action || '';
+
+    const taskId =
+      e.parameter.task || '';
+
+    switch(action) {
+
+      case 'submit':
+
+        return renderPage(
+          'EmployeeSubmit',
+          taskId,
+          'Submit Task'
+        );
+
+      case 'review':
+
+        return renderPage(
+          'AdminReview',
+          taskId,
+          'Review Task'
+        );
+
+      case 'resubmit':
+
+        return renderPage(
+          'EmployeeSubmit',
+          taskId,
+          'Resubmit Task'
+        );
+
+      case 'reject':
+
+        return renderPage(
+          'AdminReview',
+          taskId,
+          'Reject Task'
+        );
+
+      case 'approve':
+
+        approveTask(taskId);
+
+        return successPage(
+          'Task Approved Successfully'
+        );
+
+      case 'create':
+
+        return HtmlService
+
+          .createTemplateFromFile(
+            'CreateTask'
+          )
+
+          .evaluate()
+
+          .setTitle(
+            'Create Task'
+          );
+
+      default:
+
+        return HtmlService
+
+          .createTemplateFromFile(
+            'Home'
+          )
+
+          .evaluate()
+
+          .setTitle(
+            'Task Management System'
+          );
+
+    }
+
+  } catch(err) {
+
+    return errorPage(
+      err.message
+    );
+
+  }
+
+}
+
+
+/*********************************************************
+ * PAGE RENDER
+ *********************************************************/
+
+function renderPage(
+  fileName,
+  taskId,
+  title
+) {
+
+  const html =
+
+    HtmlService
+      .createTemplateFromFile(
+        fileName
+      );
+
+  html.taskId =
+    taskId;
+
+  return html
+    .evaluate()
+    .setTitle(title)
+    .setXFrameOptionsMode(
+      HtmlService
+      .XFrameOptionsMode
+      .ALLOWALL
+    );
+}
+
+
+/*********************************************************
+ * SUCCESS PAGE
+ *********************************************************/
+
+function successPage(message) {
+
+  return HtmlService
+    .createHtmlOutput(
+
+      '<h1 style="font-family:Arial;text-align:center;margin-top:100px;color:green;">' +
+
+      message +
+
+      '</h1>'
+    );
+}
+
+
+/*********************************************************
+ * ERROR PAGE
+ *********************************************************/
+
+function errorPage(message) {
+
+  return HtmlService
+    .createHtmlOutput(
+
+      '<h1 style="font-family:Arial;text-align:center;margin-top:100px;color:red;">' +
+
+      message +
+
+      '</h1>'
+    );
+}
+

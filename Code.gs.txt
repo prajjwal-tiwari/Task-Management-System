@@ -1,0 +1,183 @@
+/*********************************************************
+ * TASK MANAGEMENT SYSTEM V2
+ * CONFIGURATION
+ *********************************************************/
+function onOpen() {
+
+  SpreadsheetApp
+    .getUi()
+    .createMenu(
+      'Task Portal'
+    )
+
+    .addItem(
+      'Open Portal',
+      'openPortal'
+    )
+
+    .addToUi();
+
+}
+
+function openPortal() {
+
+  const url =
+
+    getConfigValue(
+      'WEB_APP_URL'
+    );
+
+  const html =
+
+    HtmlService
+      .createHtmlOutput(
+
+        '<script>' +
+        'window.open("' +
+        url +
+        '","_blank");' +
+        'google.script.host.close();' +
+        '</script>'
+
+      );
+
+  SpreadsheetApp
+    .getUi()
+    .showModalDialog(
+      html,
+      'Opening Portal'
+    );
+
+}
+
+const CONFIG = {
+
+  APP: {
+
+    NAME: 'TASK MANAGEMENT SYSTEM',
+
+    VERSION: '2.0.0',
+
+    COMPANY: 'VVDN'
+  },
+
+  SHEETS: {
+
+    TASK_DB: 'TASK_DATABASE',
+
+    MASTER: 'MASTER_DATA',
+
+    CONFIG: 'CONFIG',
+
+    LOGS: 'LOGS'
+  },
+
+  STATUS: {
+
+    OPEN: 'OPEN',
+
+    SUBMITTED: 'SUBMITTED',
+
+    APPROVED: 'APPROVED',
+
+    REJECTED: 'REJECTED'
+  },
+
+  PRIORITY: {
+
+    HIGH: 'HIGH',
+
+    MEDIUM: 'MEDIUM',
+
+    LOW: 'LOW'
+  },
+
+  REMINDER: {
+
+    NONE: 'NONE',
+
+    DAILY: 'DAILY',
+
+    BEFORE_1_HOUR: 'BEFORE_1_HOUR',
+
+    BEFORE_1_DAY: 'BEFORE_1_DAY'
+  },
+
+  UI: {
+
+    WIDTH: 1200,
+
+    HEIGHT: 800
+  }
+
+};
+
+
+
+/*********************************************************
+ * DATABASE COLUMN INDEX
+ *********************************************************/
+
+const COL = {
+
+  TASK_ID: 1,
+
+  CREATED_AT: 2,
+
+  CREATED_BY_NAME: 3,
+
+  CREATED_BY_EMAIL: 4,
+
+  PROJECT: 5,
+
+  MODEL: 6,
+
+  CATEGORY: 7,
+
+  PRIORITY: 8,
+
+  TITLE: 9,
+
+  DESCRIPTION: 10,
+
+  EMPLOYEE_NAME: 11,
+
+  EMPLOYEE_EMAIL: 12,
+
+  CC_EMAIL: 13,
+
+  TARGET_DATE: 14,
+
+  TARGET_TIME: 15,
+
+  STATUS: 16,
+
+  TASK_FOLDER: 17,
+
+  REMINDER_TYPE: 18,
+
+  REMINDER_TIME: 19,
+
+  EMPLOYEE_REMARK: 20,
+
+  ADMIN_COMMENT: 21,
+
+  THREAD_ID: 22,
+
+  SUBMITTED_AT: 23,
+
+  APPROVED_AT: 24,
+
+  REJECTED_AT: 25,
+
+  LAST_UPDATED: 26,
+
+  OVERDUE: 27,
+
+  REJECTION_COUNT: 28,
+
+  HISTORY: 29
+
+};
+
+

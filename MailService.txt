@@ -1,0 +1,972 @@
+/*********************************************************
+ * MAIL THEME
+ *********************************************************/
+
+const MAIL_THEME = {
+
+  PRIMARY: '#2563eb',
+
+  SUCCESS: '#16a34a',
+
+  DANGER: '#dc2626',
+
+  WARNING: '#ea580c',
+
+  DARK: '#111827',
+
+  LIGHT: '#f3f4f6'
+};
+
+/*********************************************************
+ * PRIORITY BADGE
+ *********************************************************/
+
+function getPriorityBadge(priority) {
+
+  priority =
+    String(priority || 'LOW')
+      .toUpperCase();
+
+  let bg = '#16a34a';
+  let icon = '🟢';
+
+  if (priority === 'HIGH') {
+
+    bg = '#dc2626';
+    icon = '🔴';
+
+  } else if (
+    priority === 'MEDIUM'
+  ) {
+
+    bg = '#ea580c';
+    icon = '🟠';
+  }
+
+  return `
+
+    <div style="
+      background:${bg};
+      color:white;
+      padding:14px 20px;
+      border-radius:12px;
+      font-weight:bold;
+      font-size:15px;
+      display:inline-block;
+      margin-bottom:20px;
+    ">
+
+      ${icon}
+      ${priority} PRIORITY
+
+    </div>
+
+  `;
+}
+
+
+/*********************************************************
+ * SUBJECT BUILDER
+ *********************************************************/
+
+function buildTaskSubject(
+  taskId,
+  priority,
+  title
+) {
+
+  let icon = '🟢';
+
+  priority =
+    String(priority || 'LOW')
+      .toUpperCase();
+
+  if (priority === 'HIGH') {
+
+    icon = '🔴';
+
+  } else if (
+    priority === 'MEDIUM'
+  ) {
+
+    icon = '🟠';
+  }
+
+  return (
+
+    icon +
+
+    ' ' +
+
+    taskId +
+
+    ' | ' +
+
+    title
+
+  );
+}
+
+
+/*********************************************************
+ * INFO CARD
+ *********************************************************/
+
+function buildInfoCard(
+  label,
+  value
+) {
+
+  return `
+
+    <tr>
+
+      <td style="
+        padding:10px;
+        background:#f8fafc;
+        width:180px;
+        font-weight:600;
+      ">
+
+        ${label}
+
+      </td>
+
+      <td style="
+        padding:10px;
+      ">
+
+        ${value || ''}
+
+      </td>
+
+    </tr>
+
+  `;
+}
+
+
+/*********************************************************
+ * DESCRIPTION CARD
+ *********************************************************/
+
+function buildDescriptionCard(
+  description
+) {
+
+  return `
+
+    <div style="
+      margin-top:25px;
+      background:#f8fafc;
+      border-left:5px solid #2563eb;
+      padding:20px;
+      border-radius:10px;
+    ">
+
+      <h3 style="
+        margin-top:0;
+      ">
+        Task Description
+      </h3>
+
+      <div style="
+        white-space:pre-wrap;
+        line-height:1.6;
+      ">
+
+        ${description || ''}
+
+      </div>
+
+    </div>
+
+  `;
+}
+
+/*********************************************************
+ * BUTTON
+ *********************************************************/
+
+function createMailButton(
+  label,
+  url,
+  color
+) {
+
+  return `
+    <a href="${url}"
+       style="
+         display:inline-block;
+         background:${color};
+         color:white;
+         padding:12px 22px;
+         text-decoration:none;
+         border-radius:10px;
+         font-weight:bold;
+         margin-right:10px;
+       ">
+       ${label}
+    </a>
+  `;
+}
+
+
+/*********************************************************
+ * MAIL LAYOUT
+ *********************************************************/
+
+function buildMailLayout(
+  title,
+  body
+) {
+
+  return `
+
+  <div style="
+    background:#f5f7fb;
+    padding:30px;
+    font-family:Arial;
+  ">
+
+    <div style="
+      max-width:800px;
+      margin:auto;
+      background:white;
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 4px 15px rgba(0,0,0,0.1);
+    ">
+
+      <div style="
+        background:${MAIL_THEME.PRIMARY};
+        color:white;
+        padding:25px;
+      ">
+
+        <h1 style="margin:0;">
+          ${CONFIG.APP.NAME}
+        </h1>
+
+      </div>
+
+      <div style="padding:30px;">
+
+        <h2>
+          ${title}
+        </h2>
+
+        ${body}
+
+      </div>
+
+      <div style="
+        background:#f3f4f6;
+        padding:15px;
+        text-align:center;
+        color:#6b7280;
+      ">
+
+        Automated Workflow Notification
+
+      </div>
+
+    </div>
+
+  </div>
+
+  `;
+}
+
+function testMailTemplate() {
+
+  const html = buildMailLayout(
+
+    'TEST MAIL',
+
+    '<p>Mail System Working</p>'
+
+  );
+
+  Logger.log(html);
+
+}
+
+
+/*********************************************************
+ * SEND TASK MAIL
+ *********************************************************/
+
+/*********************************************************
+ * SEND TASK MAIL V2
+ *********************************************************/
+
+function sendTaskMail(taskId) {
+
+  const task =
+    getTaskDetails(taskId);
+
+  if (!task) {
+
+    throw new Error(
+      'Task Not Found'
+    );
+
+  }
+
+  const html =
+    buildTaskAssignmentMail(
+      task
+    );
+
+  const subject =
+    buildTaskSubject(
+
+      task.taskId,
+
+      task.priority,
+
+      task.title
+
+    );
+
+  GmailApp.sendEmail(
+
+    task.employeeEmail,
+
+    subject,
+
+    'HTML Email Required',
+
+    {
+
+      htmlBody: html,
+
+      cc: task.ccEmail || ''
+
+    }
+
+  );
+
+  logSystem(
+
+    'MAIL_SENT',
+
+    task.taskId
+
+  );
+
+  return true;
+
+}
+
+
+/*********************************************************
+ * BUILD TASK ASSIGNMENT MAIL
+ *********************************************************/
+
+function buildTaskAssignmentMail(task) {
+
+  const priorityBadge =
+
+    getPriorityBadge(
+      task.priority
+    );
+
+  const folderButton =
+
+    createMailButton(
+
+      '📁 OPEN FOLDER',
+
+      task.folderUrl,
+
+      MAIL_THEME.SUCCESS
+
+    );
+
+  const submitUrl =
+
+    getConfigValue(
+      'WEB_APP_URL'
+    ) +
+
+    '?action=submit&task=' +
+
+    task.taskId;
+
+  const submitButton =
+
+     createMailButton(
+
+      'SUBMIT TASK',
+
+      submitUrl,
+
+     MAIL_THEME.PRIMARY
+
+    );  
+
+  const body = `
+
+    ${priorityBadge}
+
+    <h2 style="
+      margin-top:0;
+      color:#111827;
+    ">
+
+      ${task.taskId}
+
+    </h2>
+
+    <table
+      style="
+        width:100%;
+        border-collapse:collapse;
+      "
+    >
+
+      ${buildInfoCard(
+        'Project',
+        task.project
+      )}
+
+      ${buildInfoCard(
+        'Model',
+        task.model
+      )}
+
+      ${buildInfoCard(
+        'Category',
+        task.category
+      )}
+
+      ${buildInfoCard(
+        'Assigned To',
+        task.employeeName
+      )}
+
+      ${buildInfoCard(
+        'Target Date',
+        task.targetDate
+      )}
+
+      ${buildInfoCard(
+        'Status',
+        task.status
+      )}
+
+    </table>
+
+    ${buildDescriptionCard(
+      task.description
+    )}
+
+    <div style="
+      margin-top:30px;
+    ">
+
+     ${folderButton}
+
+     ${submitButton}
+
+    </div>
+
+    <div style="
+      margin-top:25px;
+      color:#6b7280;
+      font-size:14px;
+    ">
+
+      <strong>
+        Assigned By:
+      </strong>
+
+      ${task.createdByName}
+
+    </div>
+
+  `;
+
+  return buildMailLayout(
+
+    'New Task Assigned',
+
+    body
+
+  );
+}
+
+/*********************************************************
+ * MAIL TO CREATOR AFTER SUBMIT
+ *********************************************************/
+
+function sendSubmittedTaskMail(taskId) {
+
+  const task =
+    getTaskDetails(taskId);
+
+  const webAppUrl =
+    getConfigValue(
+      'WEB_APP_URL'
+    );
+
+  const reviewUrl =
+
+    webAppUrl +
+
+    '?action=review&task=' +
+
+    task.taskId;
+
+  const approveButton =
+
+    createMailButton(
+
+      'REVIEW TASK',
+
+      reviewUrl,
+
+      MAIL_THEME.PRIMARY
+
+    );
+
+  const folderButton =
+
+    createMailButton(
+
+      'OPEN FOLDER',
+
+      task.folderUrl,
+
+      MAIL_THEME.SUCCESS
+
+    );
+
+  const body = `
+
+    <h2>
+      Task Submitted
+    </h2>
+
+    <p>
+      Employee has submitted the task.
+    </p>
+
+    <table style="
+      width:100%;
+      border-collapse:collapse;
+    ">
+
+      ${buildInfoCard(
+        'Task ID',
+        task.taskId
+      )}
+
+      ${buildInfoCard(
+        'Employee',
+        task.employeeName
+      )}
+
+      ${buildInfoCard(
+        'Project',
+        task.project
+      )}
+
+      ${buildInfoCard(
+        'Status',
+        task.status
+      )}
+
+    </table>
+
+    ${buildDescriptionCard(
+      task.employeeRemark || ''
+    )}
+
+    <br>
+
+    ${approveButton}
+
+    ${folderButton}
+
+  `;
+
+  GmailApp.sendEmail(
+
+    task.createdByEmail,
+
+    '[SUBMITTED] ' +
+    task.taskId,
+
+    'HTML Required',
+
+    {
+
+      htmlBody:
+        buildMailLayout(
+          'Task Submitted',
+          body
+        )
+
+    }
+
+  );
+}
+
+/*********************************************************
+ * APPROVAL MAIL
+ *********************************************************/
+
+function sendApprovedTaskMail(taskId) {
+
+  const task =
+    getTaskDetails(taskId);
+
+  const folderButton =
+
+    createMailButton(
+
+      'OPEN FOLDER',
+
+      task.folderUrl,
+
+      MAIL_THEME.SUCCESS
+
+    );
+
+  const body = `
+
+    <h2>
+      Task Approved
+    </h2>
+
+    <p>
+      Your task has been approved.
+    </p>
+
+    <table style="
+      width:100%;
+      border-collapse:collapse;
+    ">
+
+      ${buildInfoCard(
+        'Task ID',
+        task.taskId
+      )}
+
+      ${buildInfoCard(
+        'Project',
+        task.project
+      )}
+
+      ${buildInfoCard(
+        'Status',
+        'APPROVED'
+      )}
+
+    </table>
+
+    <br>
+
+    ${folderButton}
+
+  `;
+
+  GmailApp.sendEmail(
+
+    task.employeeEmail,
+
+    '[APPROVED] ' +
+    task.taskId,
+
+    'HTML Required',
+
+    {
+
+      htmlBody:
+        buildMailLayout(
+          'Task Approved',
+          body
+        )
+
+    }
+
+  );
+
+}
+
+/*********************************************************
+ * APPROVAL MAIL
+ *********************************************************/
+
+function sendApprovedTaskMail(taskId) {
+
+  const task =
+    getTaskDetails(taskId);
+
+  const folderButton =
+
+    createMailButton(
+
+      'OPEN FOLDER',
+
+      task.folderUrl,
+
+      MAIL_THEME.SUCCESS
+
+    );
+
+  const body = `
+
+    <h2>
+      Task Approved
+    </h2>
+
+    <p>
+      Your task has been approved.
+    </p>
+
+    <table style="
+      width:100%;
+      border-collapse:collapse;
+    ">
+
+      ${buildInfoCard(
+        'Task ID',
+        task.taskId
+      )}
+
+      ${buildInfoCard(
+        'Project',
+        task.project
+      )}
+
+      ${buildInfoCard(
+        'Status',
+        'APPROVED'
+      )}
+
+    </table>
+
+    <br>
+
+    ${folderButton}
+
+  `;
+
+  GmailApp.sendEmail(
+
+    task.employeeEmail,
+
+    '[APPROVED] ' +
+    task.taskId,
+
+    'HTML Required',
+
+    {
+
+      htmlBody:
+        buildMailLayout(
+          'Task Approved',
+          body
+        )
+
+    }
+
+  );
+
+}
+
+
+
+/*********************************************************
+ * REJECTION MAIL
+ *********************************************************/
+
+function sendRejectedTaskMail(
+  taskId,
+  comment
+) {
+
+  const task =
+    getTaskDetails(taskId);
+
+  const webAppUrl =
+    getConfigValue(
+      'WEB_APP_URL'
+    );
+
+  const resubmitUrl =
+
+    webAppUrl +
+
+    '?action=resubmit&task=' +
+
+    task.taskId;
+
+  const folderButton =
+
+    createMailButton(
+
+      'OPEN FOLDER',
+
+      task.folderUrl,
+
+      MAIL_THEME.SUCCESS
+
+    );
+
+  const resubmitButton =
+
+    createMailButton(
+
+      'RESUBMIT TASK',
+
+      resubmitUrl,
+
+      MAIL_THEME.PRIMARY
+
+    );
+
+  const body = `
+
+    <h2>
+      Task Rejected
+    </h2>
+
+    <p>
+      Please review the comment
+      and resubmit.
+    </p>
+
+    ${buildDescriptionCard(
+      comment
+    )}
+
+    <br>
+
+    ${folderButton}
+
+    ${resubmitButton}
+
+  `;
+
+  GmailApp.sendEmail(
+
+    task.employeeEmail,
+
+    '[REJECTED] ' +
+    task.taskId,
+
+    'HTML Required',
+
+    {
+
+      htmlBody:
+        buildMailLayout(
+          'Task Rejected',
+          body
+        )
+
+    }
+
+  );
+
+}
+
+function testSubmitUrl() {
+
+  const task =
+    getTaskDetails(
+      'TASK-0005'
+    );
+
+  const submitUrl =
+
+    getConfigValue(
+      'WEB_APP_URL'
+    ) +
+
+    '?action=submit&task=' +
+
+    task.taskId;
+
+  Logger.log(
+    submitUrl
+  );
+
+}
+
+function sendReminderMail(taskId) {
+
+  const task =
+    getTaskDetails(taskId);
+
+  const submitUrl =
+
+    getConfigValue(
+      'WEB_APP_URL'
+    ) +
+
+    '?action=submit&task=' +
+
+    task.taskId;
+
+  const submitButton =
+
+    createMailButton(
+
+      'SUBMIT TASK',
+
+      submitUrl,
+
+      MAIL_THEME.PRIMARY
+
+    );
+
+  GmailApp.sendEmail(
+
+    task.employeeEmail,
+
+    '[REMINDER] ' +
+    task.taskId,
+
+    'HTML Required',
+
+    {
+
+      htmlBody:
+
+      buildMailLayout(
+
+        'Task Reminder',
+
+        `
+
+        <h2>
+          Pending Task Reminder
+        </h2>
+
+        <p>
+          Task is still pending.
+        </p>
+
+        <p>
+          <b>
+            ${task.taskId}
+          </b>
+        </p>
+
+        ${submitButton}
+
+        `
+
+      )
+
+    }
+
+  );
+
+}

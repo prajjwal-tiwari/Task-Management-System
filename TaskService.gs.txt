@@ -1,0 +1,892 @@
+/*********************************************************
+ * TASK SERVICE
+ *********************************************************/
+
+
+/*********************************************************
+ * GET MASTER DATA
+ *********************************************************/
+
+function getMasterData() {
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.MASTER
+    );
+
+  const data =
+    sh.getDataRange()
+      .getValues();
+
+  let projects = [];
+  let models = [];
+  let categories = [];
+  let employees = [];
+
+  for (let i = 1; i < data.length; i++) {
+
+    if (data[i][0]) {
+      projects.push(data[i][0]);
+    }
+
+    if (data[i][1]) {
+      models.push(data[i][1]);
+    }
+
+    if (data[i][2]) {
+      categories.push(data[i][2]);
+    }
+
+    if (
+      data[i][3] &&
+      data[i][4]
+    ) {
+
+      employees.push({
+
+        name: data[i][3],
+
+        email: data[i][4]
+
+      });
+    }
+  }
+
+  return {
+
+    projects:
+      [...new Set(projects)],
+
+    models:
+      [...new Set(models)],
+
+    categories:
+      [...new Set(categories)],
+
+    employees:
+      employees
+  };
+}
+
+
+/*********************************************************
+ * SAVE MASTER DATA
+ *********************************************************/
+
+function saveMasterData(obj) {
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.MASTER
+    );
+
+  const data =
+    sh.getDataRange()
+      .getValues();
+
+  const newRow = [
+
+    obj.project,
+
+    obj.model,
+
+    obj.category,
+
+    obj.employeeName,
+
+    obj.employeeEmail
+
+  ];
+
+  let exists = false;
+
+  for (let i = 1; i < data.length; i++) {
+
+    const row = [
+
+      data[i][0],
+
+      data[i][1],
+
+      data[i][2],
+
+      data[i][3],
+
+      data[i][4]
+
+    ];
+
+    if (
+
+      row.join('|') ===
+      newRow.join('|')
+
+    ) {
+
+      exists = true;
+
+      break;
+    }
+  }
+
+  if (!exists) {
+
+    sh.appendRow(
+      newRow
+    );
+  }
+}
+
+
+/*********************************************************
+ * VALIDATE TASK
+ *********************************************************/
+
+function validateTask(obj) {
+
+  if (!obj.project) {
+
+    throw new Error(
+      'Project Required'
+    );
+  }
+
+  if (!obj.taskTitle) {
+
+    throw new Error(
+      'Task Title Required'
+    );
+  }
+
+  if (!obj.employeeName) {
+
+    throw new Error(
+      'Employee Name Required'
+    );
+  }
+
+  if (!obj.employeeEmail) {
+
+    throw new Error(
+      'Employee Email Required'
+    );
+  }
+
+  if (
+
+    !isValidEmail(
+      obj.employeeEmail
+    )
+
+  ) {
+
+    throw new Error(
+      'Invalid Employee Email'
+    );
+  }
+
+  if (!obj.targetDate) {
+
+    throw new Error(
+      'Target Date Required'
+    );
+  }
+
+  return true;
+}
+
+
+/*********************************************************
+ * GET TASK BY ID
+ *********************************************************/
+
+function getTaskById(taskId) {
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.TASK_DB
+    );
+
+  const data =
+    sh.getDataRange()
+      .getValues();
+
+  for (let i = 1; i < data.length; i++) {
+
+    if (
+
+      data[i][
+        COL.TASK_ID - 1
+      ] == taskId
+
+    ) {
+
+      return {
+
+        rowNumber: i + 1,
+
+        data: data[i]
+
+      };
+    }
+  }
+
+  return null;
+}
+
+
+/*********************************************************
+ * CREATE TASK
+ *********************************************************/
+
+function createTask(obj) {
+
+  const lock =
+    LockService.getScriptLock();
+
+  lock.waitLock(30000);
+
+  try {
+
+    validateTask(obj);
+
+    const sh =
+      getSheet(
+        CONFIG.SHEETS.TASK_DB
+      );
+
+    const taskId =
+      generateTaskId();
+
+    const folder =
+      createTaskFolder(
+        taskId,
+        obj.project
+      );
+
+    assignFolderAccess(
+      folder,
+      obj.employeeEmail
+    );
+
+    const now =
+      getCurrentDateTime();
+
+    const createdByEmail =
+      getCurrentUserEmail();
+
+    const createdByName =
+      createdByEmail
+        .split('@')[0];
+
+    const history =
+      addHistoryEntry(
+        '',
+        'TASK CREATED'
+      );
+
+    const row = [
+
+      taskId,                 //1
+      now,                    //2
+
+      createdByName,          //3
+      createdByEmail,         //4
+
+      obj.project,            //5
+      obj.model || '',        //6
+      obj.category || '',     //7
+
+      obj.priority || 'LOW',  //8
+
+      obj.taskTitle,          //9
+      obj.description || '',  //10
+
+      obj.employeeName,       //11
+      obj.employeeEmail,      //12
+
+      obj.ccEmail || '',      //13
+
+      obj.targetDate,         //14
+      obj.targetTime || '',   //15
+
+      CONFIG.STATUS.OPEN,     //16
+
+      folder.getUrl(),        //17
+
+      obj.reminderType || 'NONE', //18
+      obj.reminderTime || '',      //19
+
+      '',                     //20
+      '',                     //21
+      '',                     //22
+
+      '',                     //23
+      '',                     //24
+      '',                     //25
+
+      now,                    //26
+
+      'NO',                   //27
+
+      0,                      //28
+
+      history                 //29
+
+    ];
+
+    sh.appendRow(row);
+
+    saveMasterData(obj);
+
+    sendTaskMail(taskId);
+
+    logSystem(
+      'TASK_CREATED',
+      taskId
+    );
+
+    return {
+
+      status:'success',
+
+      taskId:taskId,
+
+      folderUrl:
+        folder.getUrl()
+    };
+
+  }
+
+  catch(err){
+
+    logSystem(
+      'TASK_CREATE_ERROR',
+      err.message
+    );
+
+    return {
+
+      status:'error',
+
+      message:err.message
+    };
+  }
+
+  finally {
+
+    lock.releaseLock();
+  }
+}
+
+
+
+
+/*********************************************************
+ * GET TASK DETAILS
+ *********************************************************/
+
+function getTaskDetails(taskId) {
+
+  const task =
+    getTaskById(taskId);
+
+  if (!task) {
+
+    throw new Error(
+      'Task Not Found'
+    );
+  }
+
+  const row =
+    task.data;
+
+  return {
+
+    taskId:
+      row[COL.TASK_ID - 1],
+
+    createdByEmail:
+      row[COL.CREATED_BY_EMAIL - 1],  
+
+    project:
+      row[COL.PROJECT - 1],
+
+    model:
+    row[COL.MODEL - 1],
+
+    category:
+    row[COL.CATEGORY - 1],  
+
+    title:
+      row[COL.TITLE - 1],
+
+    description:
+    row[COL.DESCRIPTION - 1],  
+
+    employeeName:
+      row[COL.EMPLOYEE_NAME - 1],
+
+    employeeEmail:
+      row[COL.EMPLOYEE_EMAIL - 1],
+
+    employeeRemark:
+      row[COL.EMPLOYEE_REMARK - 1],  
+
+    createdByName:
+    row[COL.CREATED_BY_NAME - 1],  
+
+    priority:
+      row[COL.PRIORITY - 1],
+
+    targetDate:
+      row[COL.TARGET_DATE - 1],
+
+    folderUrl:
+      row[COL.TASK_FOLDER - 1],
+
+    status:
+      row[COL.STATUS - 1]
+
+  };
+}
+
+/*********************************************************
+ * SUBMIT TASK
+ *********************************************************/
+
+function submitTask(taskId, remark) {
+
+  if (!remark || remark.length < 10) {
+
+    throw new Error(
+      'Proper Remark Required'
+    );
+
+  }
+
+  const task =
+    getTaskById(taskId);
+
+  if (!task) {
+
+    throw new Error(
+      'Task Not Found'
+    );
+
+  }
+
+  const currentStatus =
+    task.data[
+      COL.STATUS - 1
+    ];
+
+  if (
+
+    currentStatus ===
+    CONFIG.STATUS.SUBMITTED ||
+
+    currentStatus ===
+    CONFIG.STATUS.APPROVED
+
+  ) {
+
+    throw new Error(
+      'Task already submitted'
+    );
+
+  }
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.TASK_DB
+    );
+
+  const rowNo =
+    task.rowNumber;
+
+  const row =
+    task.data;
+
+  const history =
+    addHistoryEntry(
+      row[COL.HISTORY - 1],
+      'TASK SUBMITTED'
+    );
+
+  sh.getRange(
+    rowNo,
+    COL.STATUS
+  ).setValue(
+    CONFIG.STATUS.SUBMITTED
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.EMPLOYEE_REMARK
+  ).setValue(
+    remark
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.SUBMITTED_AT
+  ).setValue(
+    new Date()
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.LAST_UPDATED
+  ).setValue(
+    new Date()
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.HISTORY
+  ).setValue(
+    history
+  );
+
+  logSystem(
+    'TASK_SUBMITTED',
+    taskId
+  );
+
+  sendSubmittedTaskMail(
+    taskId
+  );
+
+  return true;
+
+}
+
+/*********************************************************
+ * APPROVE TASK
+ *********************************************************/
+
+function approveTask(taskId) {
+
+  const task =
+    getTaskById(taskId);
+
+  if (!task) {
+
+    throw new Error(
+      'Task Not Found'
+    );
+
+  }
+
+  const row =
+    task.data;
+
+  if (
+
+    row[
+      COL.STATUS - 1
+    ] ===
+    CONFIG.STATUS.APPROVED
+
+  ) {
+
+    throw new Error(
+      'Task already approved'
+    );
+
+  }
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.TASK_DB
+    );
+
+  const rowNo =
+    task.rowNumber;
+
+  const history =
+    addHistoryEntry(
+      row[COL.HISTORY - 1],
+      'TASK APPROVED'
+    );
+
+  sh.getRange(
+    rowNo,
+    COL.STATUS
+  ).setValue(
+    CONFIG.STATUS.APPROVED
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.APPROVED_AT
+  ).setValue(
+    new Date()
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.LAST_UPDATED
+  ).setValue(
+    new Date()
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.HISTORY
+  ).setValue(
+    history
+  );
+
+  sendApprovedTaskMail(
+    taskId
+  );
+
+  logSystem(
+    'TASK_APPROVED',
+    taskId
+  );
+
+  return true;
+
+}
+
+/*********************************************************
+ * REJECT TASK
+ *********************************************************/
+
+function rejectTask(
+  taskId,
+  comment
+) {
+
+  if (
+
+    !comment ||
+
+    comment.length < 10
+
+  ) {
+
+    throw new Error(
+      'Proper Rejection Comment Required'
+    );
+  }
+
+  const task =
+    getTaskById(taskId);
+
+  if (!task) {
+
+    throw new Error(
+      'Task Not Found'
+    );
+  }
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.TASK_DB
+    );
+
+  const rowNo =
+    task.rowNumber;
+
+  const row =
+    task.data;
+
+  const history =
+    addHistoryEntry(
+      row[COL.HISTORY - 1],
+      'TASK REJECTED'
+    );
+
+  const rejectionCount =
+
+    Number(
+      row[
+        COL.REJECTION_COUNT - 1
+      ] || 0
+    ) + 1;
+
+  sh.getRange(
+    rowNo,
+    COL.STATUS
+  ).setValue(
+    CONFIG.STATUS.REJECTED
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.ADMIN_COMMENT
+  ).setValue(
+    comment
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.REJECTED_AT
+  ).setValue(
+    new Date()
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.REJECTION_COUNT
+  ).setValue(
+    rejectionCount
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.LAST_UPDATED
+  ).setValue(
+    new Date()
+  );
+
+  sh.getRange(
+    rowNo,
+    COL.HISTORY
+  ).setValue(
+    history
+  );
+  sendRejectedTaskMail(
+    taskId,
+    comment
+  );
+  logSystem(
+    'TASK_REJECTED',
+    taskId
+  );
+
+  return true;
+}
+
+/*********************************************************
+ * RESUBMIT TASK
+ *********************************************************/
+
+function resubmitTask(
+  taskId,
+  remark
+) {
+
+  return submitTask(
+    taskId,
+    remark
+  );
+}
+
+/*********************************************************
+ * GET TASK SUMMARY
+ *********************************************************/
+
+function getTaskSummary(taskId) {
+
+  const task = getTaskDetails(taskId);
+
+  return task;
+}
+
+
+/*********************************************************
+ * OPEN TASK VALIDATION
+ *********************************************************/
+
+function validateTaskAccess(taskId) {
+
+  const task =
+    getTaskById(taskId);
+
+  return task != null;
+}
+
+function testCreateTask() {
+
+  const result = createTask({
+
+    project: 'CLEAR_CAPTION',
+
+    model: 'CC001',
+
+    category: 'NPI',
+
+    priority: 'HIGH',
+
+    taskTitle: 'MES API Integration',
+
+    description: 'Validate MES upload after flashing and verify serial number mapping.',
+
+    employeeName: 'Prajjwal',
+
+    employeeEmail: 'prajjwal.tiwari@vvdntech.in',
+
+    ccEmail: '',
+
+    targetDate: '2026-06-30',
+
+    targetTime: '18:00',
+
+    reminderType: 'DAILY'
+
+  });
+
+  Logger.log(result);
+
+}
+
+
+function testSubmitDirect() {
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.TASK_DB
+    );
+
+  const lastRow =
+    sh.getLastRow();
+
+  const taskId =
+    sh.getRange(
+      lastRow,
+      COL.TASK_ID
+    ).getValue();
+
+  const result = submitTask(
+    taskId,
+    'Direct submit testing'
+  );
+
+  Logger.log(result);
+
+}
+
+function testApprovalMail() {
+
+  sendApprovedTaskMail(
+    'TASK-0005'
+  );
+
+}
+
+function testWebAppUrl() {
+
+  Logger.log(
+    getConfigValue(
+      'WEB_APP_URL'
+    )
+  );
+
+}
+
+function testRejectMail() {
+
+  sendRejectedTaskMail(
+
+    'TASK-0005',
+
+    'Testing rejection mail'
+
+  );
+
+}

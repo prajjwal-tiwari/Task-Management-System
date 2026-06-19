@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <base target="_top">
+
+  <style>
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+
+      margin:0;
+
+      padding:30px;
+
+      font-family:Arial,sans-serif;
+
+      background:#f5f7fb;
+
+    }
+
+    .container{
+
+      max-width:1000px;
+
+      margin:auto;
+
+    }
+
+    .card{
+
+      background:white;
+
+      padding:25px;
+
+      border-radius:16px;
+
+      box-shadow:
+      0 4px 15px
+      rgba(0,0,0,.08);
+
+      margin-bottom:20px;
+
+    }
+
+    h1{
+
+      margin-top:0;
+
+      color:#2563eb;
+
+    }
+
+    .grid{
+
+      display:grid;
+
+      grid-template-columns:
+      repeat(2,1fr);
+
+      gap:15px;
+
+    }
+
+    input,
+    select,
+    textarea{
+
+      width:100%;
+
+      padding:12px;
+
+      border:1px solid #ddd;
+
+      border-radius:8px;
+
+    }
+
+    textarea{
+
+      height:120px;
+
+      resize:vertical;
+
+    }
+
+    label{
+
+      font-weight:bold;
+
+      display:block;
+
+      margin-bottom:5px;
+
+    }
+
+    .full{
+
+      grid-column:
+      1 / -1;
+
+    }
+
+    .btn{
+
+      background:#2563eb;
+
+      color:white;
+
+      border:none;
+
+      padding:15px 30px;
+
+      border-radius:10px;
+
+      cursor:pointer;
+
+      font-weight:bold;
+
+      font-size:16px;
+
+    }
+
+    .btn:disabled{
+
+      opacity:.7;
+
+      cursor:not-allowed;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<h2>CREATE TASK PAGE LOADED</h2>  
+
+<div class="container">
+
+<div class="card">
+
+<h1>
+New Work Assigned
+</h1>
+
+<div class="grid">
+
+<div>
+
+<label>
+Project
+</label>
+
+<input
+  id="project">
+</div>
+
+<div>
+
+<label>
+Model
+</label>
+
+<input
+  id="model">
+</div>
+
+<div>
+
+<label>
+Category
+</label>
+
+<input
+  id="category">
+</div>
+
+<div>
+
+<label>
+Priority
+</label>
+
+<select
+  id="priority">
+
+<option>
+LOW
+</option>
+
+<option>
+MEDIUM
+</option>
+
+<option>
+HIGH
+</option>
+
+<option>
+CRITICAL
+</option>
+
+</select>
+
+</div>
+
+<div class="full">
+
+<label>
+Task Title
+</label>
+
+<input
+  id="taskTitle">
+
+</div>
+
+<div class="full">
+
+<label>
+Description
+</label>
+
+<textarea
+  id="description"></textarea>
+
+</div>
+
+<div>
+
+<label>
+Employee Name
+</label>
+
+<input
+  id="employeeName">
+
+</div>
+
+<div>
+
+<label>
+Employee Email
+</label>
+
+<input
+  id="employeeEmail">
+
+</div>
+
+<div class="full">
+
+<label>
+CC Email
+</label>
+
+<input
+  id="ccEmail"
+  placeholder="qa@vvdntech.in,npi@vvdntech.in">
+
+</div>
+
+<div>
+
+<label>
+Target Date
+</label>
+
+<input
+  type="date"
+  id="targetDate">
+
+</div>
+
+<div>
+
+<label>
+Target Time
+</label>
+
+<input
+  type="time"
+  id="targetTime">
+
+</div>
+
+<div>
+
+<label>
+Reminder Type
+</label>
+
+<select
+  id="reminderType">
+
+<option value="NONE">
+No Reminder
+</option>
+
+<option value="1_HOUR">
+1 Hour
+</option>
+
+<option value="2_HOUR">
+2 Hours
+</option>
+
+<option value="4_HOUR">
+4 Hours
+</option>
+
+<option value="DAILY">
+Daily
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+<br>
+
+<button
+  id="createBtn"
+  class="btn"
+  onclick="createTask()">
+
+  CREATE TASK
+
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+function createTask(){
+
+  const btn =
+    document.getElementById(
+      'createBtn'
+    );
+
+  const obj = {
+
+    project:
+      document.getElementById('project').value.trim(),
+
+    model:
+      document.getElementById('model').value.trim(),
+
+    category:
+      document.getElementById('category').value.trim(),
+
+    priority:
+      document.getElementById('priority').value,
+
+    taskTitle:
+      document.getElementById('taskTitle').value.trim(),
+
+    description:
+      document.getElementById('description').value.trim(),
+
+    employeeName:
+      document.getElementById('employeeName').value.trim(),
+
+    employeeEmail:
+      document.getElementById('employeeEmail').value.trim(),
+
+    ccEmail:
+      document.getElementById('ccEmail').value.trim(),
+
+    targetDate:
+      document.getElementById('targetDate').value,
+
+    targetTime:
+      document.getElementById('targetTime').value,
+
+    reminderType:
+      document.getElementById('reminderType').value
+
+  };
+
+  if(
+
+    !obj.project ||
+    !obj.taskTitle ||
+    !obj.employeeName ||
+    !obj.employeeEmail ||
+    !obj.targetDate
+
+  ){
+
+    alert(
+      'Please fill all mandatory fields'
+    );
+
+    return;
+
+  }
+
+  btn.disabled = true;
+
+  btn.innerHTML =
+    '⏳ Creating Task...';
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(res){
+
+        alert(
+         'Task Created : ' +
+         res.taskId
+
+        );
+
+        btn.innerHTML =
+          '✅ Task Created';
+
+      }
+    )
+
+    .withFailureHandler(
+      function(error){
+
+        btn.disabled = false;
+
+        btn.innerHTML =
+          'CREATE TASK';
+
+        alert(
+          error.message
+        );
+
+      }
+    )
+
+    .createTask(obj);
+
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,173 @@
+/*********************************************************
+ * DRIVE SERVICE
+ *********************************************************/
+
+
+/*********************************************************
+ * GET CONFIG VALUE
+ *********************************************************/
+
+function getConfigValue(key) {
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.CONFIG
+    );
+
+  const data =
+    sh.getDataRange()
+      .getValues();
+
+  for (let i = 1; i < data.length; i++) {
+
+    if (data[i][0] == key) {
+
+      return data[i][1];
+    }
+  }
+
+  return '';
+}
+
+
+/*********************************************************
+ * GET ROOT FOLDER
+ *********************************************************/
+
+function getRootFolder() {
+
+  const rootFolderName =
+    getConfigValue(
+      'ROOT_FOLDER'
+    );
+
+  const folders =
+    DriveApp.getFoldersByName(
+      rootFolderName
+    );
+
+  if (folders.hasNext()) {
+
+    return folders.next();
+  }
+
+  return DriveApp.createFolder(
+    rootFolderName
+  );
+}
+
+
+/*********************************************************
+ * CREATE TASK FOLDER
+ *********************************************************/
+
+function createTaskFolder(
+  taskId,
+  project
+) {
+
+  const rootFolder =
+    getRootFolder();
+
+  const year =
+    Utilities.formatDate(
+      new Date(),
+      Session.getScriptTimeZone(),
+      'yyyy'
+    );
+
+  let yearFolder;
+
+  const yearFolders =
+    rootFolder.getFoldersByName(
+      year
+    );
+
+  if (yearFolders.hasNext()) {
+
+    yearFolder =
+      yearFolders.next();
+
+  } else {
+
+    yearFolder =
+      rootFolder.createFolder(year);
+
+  }
+
+  let projectFolder;
+
+  const projectFolders =
+    yearFolder.getFoldersByName(
+      project
+    );
+
+  if (projectFolders.hasNext()) {
+
+    projectFolder =
+      projectFolders.next();
+
+  } else {
+
+    projectFolder =
+      yearFolder.createFolder(project);
+
+  }
+
+  const taskFolder =
+    projectFolder.createFolder(
+      taskId
+    );
+
+  return taskFolder;
+
+}
+
+
+/*********************************************************
+ * TEST DRIVE
+ *********************************************************/
+
+function testDriveFolder() {
+
+  const folder =
+
+    createTaskFolder(
+      'TEST-001',
+      'DEMO_PROJECT'
+    );
+
+  Logger.log(
+    folder.getUrl()
+  );
+
+  return folder.getUrl();
+}
+
+
+/*********************************************************
+ * ASSIGN FOLDER ACCESS
+ *********************************************************/
+
+function assignFolderAccess(
+  folder,
+  employeeEmail
+) {
+
+  try {
+
+    if (employeeEmail) {
+
+      folder.addEditor(
+        employeeEmail
+      );
+    }
+
+  } catch (err) {
+
+    logSystem(
+      'FOLDER_ACCESS_ERROR',
+      err.message
+    );
+  }
+}

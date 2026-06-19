@@ -1,0 +1,67 @@
+function processReminders() {
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.TASK_DB
+    );
+
+  const data =
+    sh.getDataRange()
+      .getValues();
+
+  for (
+
+    let i = 1;
+
+    i < data.length;
+
+    i++
+
+  ) {
+
+    const status =
+      data[i][COL.STATUS - 1];
+
+    if (
+
+      status ===
+      CONFIG.STATUS.APPROVED
+
+    ) {
+
+      continue;
+
+    }
+
+    const reminderType =
+      data[i][
+        COL.REMINDER_TYPE - 1
+      ];
+
+    if (
+
+      reminderType ===
+      'DAILY'
+
+    ) {
+
+      const taskId =
+        data[i][
+          COL.TASK_ID - 1
+        ];
+
+      sendReminderMail(
+        taskId
+      );
+
+    }
+
+  }
+
+}
+
+function testReminder() {
+
+  processReminders();
+
+}

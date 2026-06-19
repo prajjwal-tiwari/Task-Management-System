@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <base target="_top">
+
+  <style>
+
+    body{
+
+      margin:0;
+
+      padding:30px;
+
+      font-family:Arial,sans-serif;
+
+      background:#f5f7fb;
+
+    }
+
+    .container{
+
+      max-width:800px;
+
+      margin:auto;
+
+    }
+
+    .card{
+
+      background:white;
+
+      padding:30px;
+
+      border-radius:16px;
+
+      box-shadow:
+      0 4px 15px
+      rgba(0,0,0,.08);
+
+    }
+
+    h1{
+
+      margin-top:0;
+
+      color:#2563eb;
+
+    }
+
+    .task-id{
+
+      font-size:22px;
+
+      font-weight:bold;
+
+      margin:20px 0;
+
+    }
+
+    .btn{
+
+      border:none;
+
+      padding:14px 25px;
+
+      border-radius:10px;
+
+      color:white;
+
+      font-weight:bold;
+
+      cursor:pointer;
+
+      margin-right:10px;
+
+      transition:.3s;
+
+    }
+
+    .btn:hover{
+
+      transform:
+      translateY(-2px);
+
+    }
+
+    .approve{
+
+      background:#10b981;
+
+    }
+
+    .reject{
+
+      background:#ef4444;
+
+    }
+
+    .btn:disabled{
+
+      opacity:.7;
+
+      cursor:not-allowed;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+
+    <h1>
+      Task Review Portal
+    </h1>
+
+    <div class="task-id">
+
+      Task ID:
+      <?= taskId ?>
+
+    </div>
+
+    <p>
+      Review the submitted task and take action.
+    </p>
+
+    <br>
+
+    <button
+      id="approveBtn"
+      class="btn approve"
+      onclick="approveTask()">
+
+      APPROVE TASK
+
+    </button>
+
+    <button
+      id="rejectBtn"
+      class="btn reject"
+      onclick="rejectTask()">
+
+      REJECT TASK
+
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+function approveTask(){
+
+  const btn =
+    document.getElementById(
+      'approveBtn'
+    );
+
+  btn.disabled = true;
+
+  btn.innerHTML =
+    '⏳ Approving...';
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(){
+
+        btn.innerHTML =
+          '✅ Approved';
+
+        alert(
+          'Task Approved Successfully'
+        );
+
+      }
+    )
+
+    .withFailureHandler(
+      function(error){
+
+        btn.disabled = false;
+
+        btn.innerHTML =
+          'APPROVE TASK';
+
+        alert(
+          error.message
+        );
+
+      }
+    )
+
+    .approveTask(
+      '<?= taskId ?>'
+    );
+
+}
+
+function rejectTask(){
+
+  const comment =
+    prompt(
+      'Enter rejection comment'
+    );
+
+  if(
+
+    !comment ||
+
+    comment.length < 10
+
+  ){
+
+    alert(
+      'Minimum 10 characters required'
+    );
+
+    return;
+
+  }
+
+  const btn =
+    document.getElementById(
+      'rejectBtn'
+    );
+
+  btn.disabled = true;
+
+  btn.innerHTML =
+    '⏳ Rejecting...';
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(){
+
+        btn.innerHTML =
+          '❌ Rejected';
+
+        alert(
+          'Task Rejected Successfully'
+        );
+
+      }
+    )
+
+    .withFailureHandler(
+      function(error){
+
+        btn.disabled = false;
+
+        btn.innerHTML =
+          'REJECT TASK';
+
+        alert(
+          error.message
+        );
+
+      }
+    )
+
+    .rejectTask(
+
+      '<?= taskId ?>',
+
+      comment
+
+    );
+
+}
+
+</script>
+
+</body>
+</html>

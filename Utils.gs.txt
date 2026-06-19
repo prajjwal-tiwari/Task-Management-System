@@ -1,0 +1,228 @@
+/*********************************************************
+ * UTILITY SERVICE
+ *********************************************************/
+
+
+/*********************************************************
+ * GET SHEET
+ *********************************************************/
+
+function getSheet(sheetName) {
+
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(sheetName);
+
+  if (!sheet) {
+
+    throw new Error(
+      'Sheet Not Found : ' + sheetName
+    );
+  }
+
+  return sheet;
+}
+
+
+/*********************************************************
+ * LOG SYSTEM
+ *********************************************************/
+
+function logSystem(action, message) {
+
+  try {
+
+    const sh =
+      getSheet(CONFIG.SHEETS.LOGS);
+
+    sh.appendRow([
+      new Date(),
+      action,
+      message
+    ]);
+
+  } catch (err) {
+
+    Logger.log(
+      action + ' : ' + message
+    );
+  }
+}
+
+
+/*********************************************************
+ * GENERATE TASK ID
+ *********************************************************/
+
+/*********************************************************
+ * GENERATE TASK ID
+ *********************************************************/
+
+/*********************************************************
+ * GENERATE TASK ID
+ *********************************************************/
+
+function generateTaskId() {
+
+  const sh =
+    getSheet(
+      CONFIG.SHEETS.CONFIG
+    );
+
+  const data =
+    sh.getDataRange()
+      .getValues();
+
+  let rowNumber = -1;
+  let counter = 1;
+
+  for (let i = 1; i < data.length; i++) {
+
+    if (data[i][0] === 'TASK_COUNTER') {
+
+      rowNumber = i + 1;
+
+      counter =
+        Number(
+          data[i][1]
+        ) || 1;
+
+      break;
+    }
+  }
+
+  if (rowNumber === -1) {
+
+    throw new Error(
+      'TASK_COUNTER Not Found In CONFIG'
+    );
+  }
+
+  const taskId =
+
+    'TASK-' +
+
+    String(counter)
+      .padStart(4,'0');
+
+  sh.getRange(
+    rowNumber,
+    2
+  ).setValue(
+    counter + 1
+  );
+
+  return taskId;
+}
+
+/*********************************************************
+ * CURRENT USER
+ *********************************************************/
+
+function getCurrentUserEmail() {
+
+  return Session
+    .getActiveUser()
+    .getEmail();
+}
+
+
+/*********************************************************
+ * CURRENT DATE
+ *********************************************************/
+
+function getCurrentDateTime() {
+
+  return new Date();
+}
+
+
+/*********************************************************
+ * VALIDATE EMAIL
+ *********************************************************/
+
+function isValidEmail(email) {
+
+  if (!email) {
+    return false;
+  }
+
+  const regex =
+
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return regex.test(email);
+}
+
+
+/*********************************************************
+ * SAFE VALUE
+ *********************************************************/
+
+function safeValue(value) {
+
+  return value || '';
+}
+
+
+/*********************************************************
+ * HISTORY ENTRY
+ *********************************************************/
+
+function addHistoryEntry(
+  oldHistory,
+  action
+) {
+
+  const timestamp = Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone(),
+    'dd-MMM-yyyy HH:mm:ss'
+  );
+
+  const entry =
+    '[' +
+    timestamp +
+    '] ' +
+    action;
+
+  if (!oldHistory) {
+
+    return entry;
+  }
+
+  return oldHistory +
+    '\n' +
+    entry;
+}
+
+
+/*********************************************************
+ * SUCCESS RESPONSE
+ *********************************************************/
+
+function successResponse(data) {
+
+  return {
+
+    status: 'success',
+
+    data: data || {}
+  };
+}
+
+
+/*********************************************************
+ * ERROR RESPONSE
+ *********************************************************/
+
+function errorResponse(message) {
+
+  return {
+
+    status: 'error',
+
+    message: message
+  };
+}
+

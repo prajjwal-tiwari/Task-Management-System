@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <base target="_top">
+
+  <style>
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+
+      margin:0;
+
+      padding:40px;
+
+      font-family:Arial,sans-serif;
+
+      background:#f5f7fb;
+
+    }
+
+    .container{
+
+      max-width:1000px;
+
+      margin:auto;
+
+    }
+
+    .header{
+
+      background:white;
+
+      padding:30px;
+
+      border-radius:16px;
+
+      box-shadow:
+      0 4px 15px
+      rgba(0,0,0,.08);
+
+      margin-bottom:30px;
+
+    }
+
+    .header h1{
+
+      margin:0;
+
+      color:#2563eb;
+
+    }
+
+    .header p{
+
+      color:#666;
+
+    }
+
+    .grid{
+
+      display:grid;
+
+      grid-template-columns:
+      repeat(auto-fit,minmax(250px,1fr));
+
+      gap:20px;
+
+    }
+
+    .card{
+
+      background:white;
+
+      padding:25px;
+
+      border-radius:16px;
+
+      box-shadow:
+      0 4px 15px
+      rgba(0,0,0,.08);
+
+    }
+
+    .card h3{
+
+      margin-top:0;
+
+    }
+
+    .btn{
+
+      display:block;
+
+      text-decoration:none;
+
+      text-align:center;
+
+      padding:14px;
+
+      border-radius:10px;
+
+      color:white;
+
+      font-weight:bold;
+
+      margin-top:15px;
+
+      transition:.3s;
+
+    }
+
+    .btn:hover{
+
+      transform:
+      translateY(-2px);
+
+    }
+
+    .blue{
+
+      background:#2563eb;
+
+    }
+
+    .green{
+
+      background:#10b981;
+
+    }
+
+    .orange{
+
+      background:#f59e0b;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="header">
+
+      <h1>
+        TASK MANAGEMENT SYSTEM
+      </h1>
+
+      <p>
+        Workflow Automation Portal
+      </p>
+
+    </div>
+
+    <div class="grid">
+
+      <div class="card">
+
+        <h3>
+          Create Task
+        </h3>
+
+        <p>
+          Create and assign a new task.
+        </p>
+
+        <a
+          class="btn blue"
+          href="/a/macros/vvdntech.in/s/AKfycbzNKDbKALwVPL9NG5ZfuR0UuH1kqnqS4kI8nI8VU7kpHgz0LEffriu7jaPxLpFrvPR1/exec?action=create">
+
+          CREATE TASK
+
+        </a>
+
+      </div>
+
+      <div class="card">
+
+        <h3>
+          My Tasks
+        </h3>
+
+        <p>
+          View all assigned tasks.
+        </p>
+
+        <a
+          class="btn green"
+          href="?action=mytasks">
+
+          MY TASKS
+
+        </a>
+
+      </div>
+
+      <div class="card">
+
+        <h3>
+          Pending Approvals
+        </h3>
+
+        <p>
+          Review submitted tasks.
+        </p>
+
+        <a
+          class="btn orange"
+          href="?action=pending">
+
+          PENDING APPROVALS
+
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+
+</html>
